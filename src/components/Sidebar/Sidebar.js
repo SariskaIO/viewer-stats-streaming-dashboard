@@ -54,9 +54,6 @@ function Sidebar(props) {
       }
     };
   });
-  const linkOnClick = () => {
-    document.documentElement.classList.remove("nav-open");
-  };
   const { routes, rtlActive, logo } = props;
   let logoImg = null;
   let logoText = null;
@@ -108,9 +105,7 @@ function Sidebar(props) {
     }
   }
   return (
-    <BackgroundColorContext.Consumer>
-      {({ color }) => (
-        <div className="sidebar" data={color}>
+        <div className="sidebar">
           <div className="sidebar-wrapper" ref={sidebarRef}>
             {logoImg !== null || logoText !== null ? (
               <div className="logo">
@@ -121,6 +116,7 @@ function Sidebar(props) {
             <Nav>
               {routes.map((prop, key) => {
                 if (prop.redirect) return null;
+                if(prop.path === '/stream/:streamId') return null;
                 return (
                   <li
                     className={
@@ -139,17 +135,9 @@ function Sidebar(props) {
                   </li>
                 );
               })}
-              <li className="active-pro">
-                <ReactstrapNavLink href="https://www.creative-tim.com/product/black-dashboard-pro-react?ref=bdr-user-archive-sidebar-upgrade-pro">
-                  <i className="tim-icons icon-spaceship" />
-                  <p>Upgrade to PRO</p>
-                </ReactstrapNavLink>
-              </li>
             </Nav>
           </div>
         </div>
-      )}
-    </BackgroundColorContext.Consumer>
   );
 }
 

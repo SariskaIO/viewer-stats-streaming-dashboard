@@ -24,12 +24,12 @@ import PerfectScrollbar from "perfect-scrollbar";
 import AdminNavbar from "components/Navbars/AdminNavbar.js";
 import Footer from "components/Footer/Footer.js";
 import Sidebar from "components/Sidebar/Sidebar.js";
-import FixedPlugin from "components/FixedPlugin/FixedPlugin.js";
 
 import routes from "routes.js";
 
-import logo from "assets/img/react-logo.png";
+import logo from "assets/img/logo.svg";
 import { BackgroundColorContext } from "contexts/BackgroundColorContext";
+import StreamView from "views/StreamView";
 
 var ps;
 
@@ -105,8 +105,8 @@ function Admin(props) {
             <Sidebar
               routes={routes}
               logo={{
-                outterLink: "https://www.creative-tim.com/",
-                text: "Creative Tim",
+                outterLink: "https://assets.sariska.io/Logo_Sariska.svg",
+                text: "SARISKA",
                 imgSrc: logo,
               }}
               toggleSidebar={toggleSidebar}
@@ -120,6 +120,10 @@ function Admin(props) {
               <Routes>
                 {getRoutes(routes)}
                 <Route
+                  path="/admin/stream/:streamId"
+                  element={<StreamView  />}
+                />
+                <Route
                   path="/"
                   element={<Navigate to="/admin/dashboard" replace />}
                 />
@@ -130,7 +134,6 @@ function Admin(props) {
               }
             </div>
           </div>
-          <FixedPlugin bgColor={color} handleBgClick={changeColor} />
         </React.Fragment>
       )}
     </BackgroundColorContext.Consumer>
