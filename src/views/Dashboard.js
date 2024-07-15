@@ -1,22 +1,8 @@
-/*!
 
-=========================================================
-* Black Dashboard React v1.2.2
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/black-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/black-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-import React from "react";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import './index.css'
 
 // reactstrap components
 import {
@@ -28,17 +14,20 @@ import {
   Row,
   Col,
 } from "reactstrap";
+import { getViewerStreamId } from "store/actions/viewer";
 
 function Dashboard() {
   const navigate = useNavigate();
-  const handleStream = (stream) => {
-    console.log('stream', stream)
-    if(!stream) return;
-    const streamId = stream.split('/')[1];
-    localStorage.setItem('viewer-streamId', streamId);
-    console.log('streamId', streamId)
+  const streams = useSelector(state => state.stream);
+  const dispatch = useDispatch();
+
+  const handleStream = (streamId) => {
+    if(!streamId) return;
+    localStorage.setItem('viewer-stream-id', streamId);
+    dispatch(getViewerStreamId(streamId));
     navigate(`/admin/stream/${streamId}`)
   }
+
   return (
     <>
       <div className="content">
@@ -57,13 +46,20 @@ function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.map((stream, index) => (
-                      <tr key={stream} onClick={() => handleStream(stream)}>
-                        <td>{index}</td>
-                        <td>{stream}</td>
-                      </tr>
-                    )
-                    )}
+                    {Object.keys(streams)?.length ? Object.keys(streams).map((stream, index) => {
+                      let streamId = stream.split('/')[1];
+                      return (
+                        <tr key={streamId} onClick={() => handleStream(streamId)} className="stream-table-row">
+                          <td>{index+1}</td>
+                          <td>{streamId}</td>
+                        </tr>
+                      )
+                    }
+                    ) : 
+                    <tr >
+                          <td>No Stream found</td>
+                    </tr>
+                    }
                   </tbody>
                 </Table>
               </CardBody>

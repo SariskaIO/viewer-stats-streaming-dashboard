@@ -1,21 +1,5 @@
-/*!
 
-=========================================================
-* Black Dashboard React v1.2.2
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/black-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/black-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-import React from "react";
+import React, { useEffect } from "react";
 import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 // javascript plugin used to create scrollbars on windows
 import PerfectScrollbar from "perfect-scrollbar";
@@ -30,6 +14,11 @@ import routes from "routes.js";
 import logo from "assets/img/logo.svg";
 import { BackgroundColorContext } from "contexts/BackgroundColorContext";
 import StreamView from "views/StreamView";
+import { useDispatch } from "react-redux";
+import { getToken } from "utils";
+import { VIEWER_STATS_URL } from "constants";
+import axios from "axios";
+import { fetchStreams } from "store/actions/stream";
 
 var ps;
 
@@ -39,41 +28,30 @@ function Admin(props) {
   const [sidebarOpened, setsidebarOpened] = React.useState(
     document.documentElement.className.indexOf("nav-open") !== -1
   );
-  // React.useEffect(() => {
-  //   if (navigator.platform.indexOf("Win") > -1) {
-  //     document.documentElement.className += " perfect-scrollbar-on";
-  //     document.documentElement.classList.remove("perfect-scrollbar-off");
-  //     ps = new PerfectScrollbar(mainPanelRef.current, {
-  //       suppressScrollX: true,
-  //     });
-  //     let tables = document.querySelectorAll(".table-responsive");
-  //     for (let i = 0; i < tables.length; i++) {
-  //       ps = new PerfectScrollbar(tables[i]);
-  //     }
-  //   }
-  //   // Specify how to clean up after this effect:
-  //   return function cleanup() {
-  //     if (navigator.platform.indexOf("Win") > -1) {
-  //       ps.destroy();
-  //       document.documentElement.classList.add("perfect-scrollbar-off");
-  //       document.documentElement.classList.remove("perfect-scrollbar-on");
-  //     }
-  //   };
-  // });
-  // React.useEffect(() => {
-  //   if (navigator.platform.indexOf("Win") > -1) {
-  //     let tables = document.querySelectorAll(".table-responsive");
-  //     for (let i = 0; i < tables.length; i++) {
-  //       ps = new PerfectScrollbar(tables[i]);
-  //     }
-  //   }
-  //   document.documentElement.scrollTop = 0;
-  //   document.scrollingElement.scrollTop = 0;
-  //   if (mainPanelRef.current) {
-  //     mainPanelRef.current.scrollTop = 0;
-  //   }
-  // }, [location]);
-  // this function opens and closes the sidebar on small devices
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchAllStreams = async() => {
+      try{
+        const token = await getToken();
+        if(!token) throw new Error(`HTTP error! statusText: Invalid token`);
+        const response = await axios.get(VIEWER_STATS_URL, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }}
+        );
+        if(response.status === 200 && !('code' in response.data)){
+          dispatch(fetchStreams({...response.data}));
+        }else{
+          dispatch(fetchStreams({}));
+        }
+      }catch(e){
+          console.log('error in fetching streams',e)
+      }
+    }
+    fetchAllStreams();
+  }, [])
+
   const toggleSidebar = () => {
     document.documentElement.classList.toggle("nav-open");
     setsidebarOpened(!sidebarOpened);

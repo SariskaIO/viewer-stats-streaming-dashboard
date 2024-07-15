@@ -1,62 +1,62 @@
-/*!
 
-=========================================================
-* Black Dashboard React v1.2.2
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/black-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/black-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-import React from "react";
-// nodejs library that concatenates classes
-import classNames from "classnames";
-// react plugin used to create charts
-import { Line, Bar } from "react-chartjs-2";
+import React, { useEffect, useState } from "react";
 
 // reactstrap components
 import {
-  Button,
-  ButtonGroup,
   Card,
   CardHeader,
   CardBody,
   CardTitle,
-  DropdownToggle,
-  DropdownMenu,
-  DropdownItem,
-  UncontrolledDropdown,
-  Label,
-  FormGroup,
-  Input,
   Table,
   Row,
   Col,
-  UncontrolledTooltip,
 } from "reactstrap";
 
-// core components
-import {
-  chartExample1,
-  chartExample2,
-  chartExample3,
-  chartExample4,
-} from "variables/charts.js";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { flagsPassedInStreaming } from "utils";
+import { getViewerCount } from "utils";
+import { getFirstStreamId } from "utils";
 
 function StreamView() {
-  console.log('StreamView')
   const { streamId } = useParams();
-  const navigate = useNavigate();
-  console.log('streamIdd', streamId, streamId === ':streamId')
-  const id = streamId || localStorage.getItem('viewer-streamId');
+  const reduxStreamId = useSelector(state => state.viewer)?.streamId;
+  const streams = useSelector(state => state.stream);
+  const [currentStream, setCurrentStream] = useState(null);
+  const [flags, setFlags] = useState({});
+  const [currentViewers, setCurrentViewers] = useState(0);
+
+  const [id, setId] = useState( streamId || reduxStreamId || localStorage.getItem('viewer-stream-id'));
+
+  let streamKeys = Object.keys(streams);
+
+  const fetchStreamDetails = async(newId) => {
+    if(!streamKeys?.length) return null;
+    let streamObj = streamKeys.find(stream => stream.includes(`${id || newId}`));
+    let stream = JSON.parse(streams[streamObj]);
+    let streamDetails={};
+    for (const [key, value] of Object.entries(stream)){
+      if(key === 'owner_id' || key === 'app_id' || key === 'uuid' || key === 'room_name') continue;
+      streamDetails[key] = value;
+    }
+    setCurrentStream({...streamDetails});
+    setFlags(flagsPassedInStreaming({...streamDetails}));
+    let viewerCountObj = await getViewerCount({...streamDetails}, id);
+    let valuesOfViewerCountObj = viewerCountObj && Object.values(viewerCountObj);
+    if(valuesOfViewerCountObj?.length){
+      setCurrentViewers(valuesOfViewerCountObj[0]?.current_viewers);
+    }
+  }
+  
+  useEffect(()=>{
+    if(!id){
+     let newId = getFirstStreamId(streamKeys);
+     setId(newId);
+     fetchStreamDetails(newId)
+    }else{
+      fetchStreamDetails();
+    }
+  },[streamKeys?.length])
 
   const renderNoStreamIdHTML = () => {
     return (
@@ -72,13 +72,13 @@ function StreamView() {
       </Card>
     )
   }
-
+  
   return (
     <>
       <div className="content">
         <Row>
           <Col md="12">
-            {!id ? 
+            {!(id && currentStream && Object.keys(currentStream)?.length)? 
             <>{renderNoStreamIdHTML()}</>
             :
             <Card className="card-tasks">
@@ -95,7 +95,7 @@ function StreamView() {
                         <td>
                           <p className="title">User-ID</p>
                           <p className="text-muted">
-                            gfdfgbh
+                            {currentStream?.user_id}
                           </p>
                         </td>
                       </tr>
@@ -103,16 +103,18 @@ function StreamView() {
                         <td>
                           <p className="title">Number of Viewers</p>
                           <p className="text-muted">
-                            1200
+                            {currentViewers}
                           </p>
                         </td>
                       </tr>
                       <tr>
                         <td>
                           <p className="title">Flags Passed in the Stream</p>
-                          <p className="text-muted">
-                          {'{flags object}'}
-                          </p>
+                          <div className="text-muted">
+                          {Object.entries(flags).map(([key, value]) => (
+                            <p key={key} className="text-muted">{`${key}: ${value}`}</p>
+                          ))}
+                          </div>
                         </td>
                       </tr>
                     </tbody>
